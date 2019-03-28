@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Securivo</string>
+    <string name="title_activity_upload">UploadActivity</string>
 </resources>

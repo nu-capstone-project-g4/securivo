@@ -9,8 +9,6 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -56,7 +54,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+                                    startActivity(new Intent(getBaseContext(), MainActivity.class));
                                     finish();
                                     Toast.makeText(AuthenticationActivity.this, "Logged In Successfully As Admin", Toast.LENGTH_SHORT).show();
                                 }
@@ -77,7 +75,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+                                    startActivity(new Intent(getBaseContext(), MainActivity.class));
                                     finish();
                                     Toast.makeText(AuthenticationActivity.this, "Logged In Successfully As User", Toast.LENGTH_SHORT).show();
                                 }
