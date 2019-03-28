@@ -31,6 +31,14 @@
           }
         },
         {
+          "client_id": "663782666767-lm3p401rpa5fit7mktar0n0ukmobrs89.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.securivo",
+            "certificate_hash": "92456843c6353490a4eea1a3265886f8a0738bf1"
+          }
+        },
+        {
           "client_id": "663782666767-1332c5gcgc6t7j8f6mkqm8pf046jhank.apps.googleusercontent.com",
           "client_type": 3
         }

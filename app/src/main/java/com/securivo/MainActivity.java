@@ -3,6 +3,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
-        Log.d("APP/USER", user.getUid());
         if(user == null){
             startActivity(new Intent(this, AuthenticationActivity.class));
         }
@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-            Button buttonLogout = findViewById(R.id.logoutBtn);
-        buttonLogout.setOnClickListener(new View.OnClickListener() {
+            FloatingActionButton buttonLogout = findViewById(R.id.logoutBtn);
+            buttonLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AuthUI.getInstance().signOut(getBaseContext()).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(new Intent(getBaseContext(), AuthenticationActivity.class));
                     }
                 });
-            }
-        });
+                }
+            });
 
     }
 }

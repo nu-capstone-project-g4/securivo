@@ -3,6 +3,7 @@ package com.securivo;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -18,6 +19,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -32,16 +34,14 @@ public class UploadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
         FloatingActionButton fab = findViewById(R.id.fabSelectFile);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-                intent.setType("*/*");
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                intent.setType("video/*");
                 startActivityForResult(intent, 7);
             }
         });
@@ -62,16 +62,26 @@ public class UploadActivity extends AppCompatActivity {
                             .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                 @Override
                                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    // Get a URL to the uploaded content
-                                    Log.d("APP/UP/SUCCESS", mStorageRef.getDownloadUrl().toString());
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File uploaded successfully!", Snackbar.LENGTH_LONG)
+                                            .setAction("Action", null).show();
+                                    Log.d("APP/UP/SUCCESS", taskSnapshot.toString());
+                                }
+                            })
+                            .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                    double progress = taskSnapshot.getBytesTransferred()*100/taskSnapshot.getTotalByteCount();
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Progress: "+progress+"%", Snackbar.LENGTH_LONG)
+                                            .setAction("Action", null).show();
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Handle unsuccessful uploads
-                                    Snackbar.make(findViewById(android.R.id.content), exception.toString(), Snackbar.LENGTH_LONG)
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occured.", Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
+                                    Log.d("APP/UP/FAIL", exception.toString());
                                 }
                             });
                 }
