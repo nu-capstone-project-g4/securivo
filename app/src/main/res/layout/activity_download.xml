@@ -3,12 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/downloadCoordinator"
     android:layout_height="match_parent"
 
     tools:context=".DownloadActivity">
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/editTextUIDin"
         android:layout_width="372dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -17,33 +18,33 @@
         android:ems="10"
         android:inputType="text"
         android:selectAllOnFocus="true"
-        android:text="Enter UID"
+        android:text="o6Lrw44SREWukIxrQqozGgoplo82"
         android:textAlignment="center"
-        android:textSize="30sp"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/editTextMD5in"
         android:layout_width="372dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:ems="10"
         android:inputType="text"
         android:selectAllOnFocus="true"
-        android:text="Enter Code"
+        android:text="1aa23af2c905586a0ec519e45345f13c"
         android:textAlignment="center"
-        android:textSize="30sp"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.521"
+        app:layout_constraintHorizontal_bias="0.652"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextUIDin" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fabSelectFile"
+        android:id="@+id/fabDownloadFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
