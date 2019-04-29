@@ -13,6 +13,7 @@
         android:roundIcon="@mipmap/logo_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".ProfileActivity"></activity>
         <activity android:name=".DownloadActivity" />
         <activity
             android:name=".UploadActivity"
@@ -25,7 +26,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AuthenticationActivity"></activity>
+        <activity android:name=".AuthenticationActivity" />
     </application>
 
 </manifest>

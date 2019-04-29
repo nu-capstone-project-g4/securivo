@@ -27,6 +27,10 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(getBaseContext(), DownloadActivity.class));
     }
 
+    protected void launchProfileActivity (View v) {
+        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

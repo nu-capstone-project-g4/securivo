@@ -1,6 +1,7 @@
 package com.securivo;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,15 +21,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.Console;
 import java.io.File;
+import java.text.DecimalFormat;
 
 public class UploadActivity extends AppCompatActivity {
     private StorageReference mStorageRef;
     private FirebaseUser firebaseUser;
+    String[] filePathTemp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,19 +54,37 @@ public class UploadActivity extends AppCompatActivity {
 
     }
 
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        startManagingCursor(cursor);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case 7:
                 if (resultCode == RESULT_OK) {
-                    String[] filePathTemp = data.getData().getPath().split("/");
-                    String firebaseDbPath = firebaseUser.getUid()+"/"+filePathTemp[filePathTemp.length-1];
-                    mStorageRef.child(firebaseDbPath).putFile(data.getData())
+                    filePathTemp = getPath(data.getData()).split("/");
+                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Calculating MD5...", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    String fileExt = filePathTemp[filePathTemp.length-1]; fileExt = fileExt.substring(fileExt.lastIndexOf(".") + 1);
+                    final String fileName = filePathTemp[filePathTemp.length-1];
+                    Log.d("APP/TEMP", fileName);
+                    final String calculatedMD5 = MD5.calculateMD5(new File(getPath(data.getData())));
+                    String firebaseDbPath = firebaseUser.getUid()+"/"+calculatedMD5;
+
+                    StorageMetadata storageMetadata = new StorageMetadata.Builder().setCustomMetadata("fileName", fileName).build();
+
+                    mStorageRef.child(firebaseDbPath).putFile(data.getData(), storageMetadata)
                             .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                 @Override
                                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File uploaded successfully!", Snackbar.LENGTH_LONG)
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File upload successful!\nMD5: "+calculatedMD5, Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
                                     Log.d("APP/UP/SUCCESS", taskSnapshot.toString());
                                 }
@@ -70,8 +92,13 @@ public class UploadActivity extends AppCompatActivity {
                             .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                                 @Override
                                 public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                    double progress = taskSnapshot.getBytesTransferred()*100/taskSnapshot.getTotalByteCount();
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Progress: "+progress+"%", Snackbar.LENGTH_LONG)
+                                    float totalMB = Float.valueOf(taskSnapshot.getTotalByteCount())/1000000;
+                                    float doneMB = Float.valueOf(taskSnapshot.getBytesTransferred())/1000000;
+                                    DecimalFormat df = new DecimalFormat("#.##");
+                                    double progress = doneMB*100/totalMB;
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File: "+fileName+"\nProgress: "
+                                            +df.format(progress)+"%\t\tUploaded "+df.format(doneMB)+
+                                            "MB out of "+df.format(totalMB)+"MB", Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
                                 }
                             })
@@ -79,7 +106,8 @@ public class UploadActivity extends AppCompatActivity {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Handle unsuccessful uploads
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occured.", Snackbar.LENGTH_LONG)
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occured."
+                                            , Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
                                     Log.d("APP/UP/FAIL", exception.toString());
                                 }
