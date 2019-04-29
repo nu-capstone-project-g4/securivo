@@ -1,4 +1,4 @@
-package com.securivo;
+package com.securivo.tools;
 
 import android.text.TextUtils;
 import android.util.Log;

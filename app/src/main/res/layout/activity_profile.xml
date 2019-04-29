@@ -21,7 +21,7 @@
 
     <EditText
         android:id="@+id/editTextUID"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="36dp"
@@ -30,7 +30,7 @@
         android:selectAllOnFocus="true"
         android:text="UID"
         android:textAlignment="center"
-        android:textSize="32sp"
+        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />

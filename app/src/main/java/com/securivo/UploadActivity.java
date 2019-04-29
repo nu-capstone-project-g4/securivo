@@ -10,10 +10,10 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.EditText;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -24,14 +24,15 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.securivo.tools.MD5;
 
-import java.io.Console;
 import java.io.File;
 import java.text.DecimalFormat;
 
 public class UploadActivity extends AppCompatActivity {
     private StorageReference mStorageRef;
     private FirebaseUser firebaseUser;
+    private EditText editTextMD5;
     String[] filePathTemp;
 
     @Override
@@ -50,17 +51,10 @@ public class UploadActivity extends AppCompatActivity {
             }
         });
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        Log.d("APP", mStorageRef.toString());
-
-    }
-
-    public String getPath(Uri uri) {
-        String[] projection = { MediaStore.Images.Media.DATA };
-        Cursor cursor = managedQuery(uri, projection, null, null, null);
-        startManagingCursor(cursor);
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        return cursor.getString(column_index);
+        editTextMD5 = findViewById(R.id.editTextMD5);
+        editTextMD5.setInputType(InputType.TYPE_NULL);
+        editTextMD5.setTextIsSelectable(true);
+        editTextMD5.setKeyListener(null);
     }
 
     @Override
@@ -87,6 +81,7 @@ public class UploadActivity extends AppCompatActivity {
                                     Snackbar.make(findViewById(R.id.uploadCoordinator), "File upload successful!\nMD5: "+calculatedMD5, Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
                                     Log.d("APP/UP/SUCCESS", taskSnapshot.toString());
+                                    editTextMD5.setText(calculatedMD5);
                                 }
                             })
                             .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
@@ -96,17 +91,16 @@ public class UploadActivity extends AppCompatActivity {
                                     float doneMB = Float.valueOf(taskSnapshot.getBytesTransferred())/1000000;
                                     DecimalFormat df = new DecimalFormat("#.##");
                                     double progress = doneMB*100/totalMB;
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File: "+fileName+"\nProgress: "
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Progress: "
                                             +df.format(progress)+"%\t\tUploaded "+df.format(doneMB)+
-                                            "MB out of "+df.format(totalMB)+"MB", Snackbar.LENGTH_LONG)
-                                            .setAction("Action", null).show();
+                                            "MB out of "+df.format(totalMB)+"MB", Snackbar.LENGTH_LONG).show();
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Handle unsuccessful uploads
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occured."
+                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occurred."
                                             , Snackbar.LENGTH_LONG)
                                             .setAction("Action", null).show();
                                     Log.d("APP/UP/FAIL", exception.toString());
@@ -115,5 +109,14 @@ public class UploadActivity extends AppCompatActivity {
                 }
                 break;
         }
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        startManagingCursor(cursor);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
     }
 }
