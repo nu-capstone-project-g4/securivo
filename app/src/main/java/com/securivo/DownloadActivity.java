@@ -61,8 +61,8 @@ public class DownloadActivity extends AppCompatActivity {
                             fileName = storageMetadata.getCustomMetadata("fileName");
                             fileExt = fileName.substring(fileName.lastIndexOf(".") + 1);
                             fileName = fileName.substring(0, fileName.lastIndexOf(".")-1);
-                            File downLocation = new File("/sdcard/"+Environment.DIRECTORY_DOWNLOADS+"/Securivo/");
-                            Log.e("MKDIR", downLocation.mkdir() ? "Created" : "Not");
+                            File downLocation = new File(Environment.getExternalStorageDirectory()+"/"+Environment.DIRECTORY_DOWNLOADS, "Securivo");
+                            Log.e("MKDIR", downLocation.mkdirs() ? "Created"+downLocation.toString() : "Not"+downLocation.toString());
                             try {
                                 localFile = File.createTempFile(fileName, "." + fileExt, downLocation);
                             } catch (Exception e) {
@@ -94,7 +94,7 @@ public class DownloadActivity extends AppCompatActivity {
                                             OutputStream os = new FileOutputStream(localFile);
                                             os.write(decrypted);
                                             os.close();
-                                            Snackbar.make(findViewById(R.id.downloadCoordinator), "Download and decryption complete...", Snackbar.LENGTH_LONG)
+                                            Snackbar.make(findViewById(R.id.downloadCoordinator), "Download and decryption complete", Snackbar.LENGTH_LONG)
                                                     .setAction("Action", null).show();
                                         } catch (Exception e) {
                                             Log.e("APP/DOWN/BOS", e.getMessage());
