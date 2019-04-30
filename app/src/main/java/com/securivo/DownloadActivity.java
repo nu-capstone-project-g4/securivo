@@ -18,8 +18,13 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
+import com.securivo.tools.AES;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.DecimalFormat;
 
 public class DownloadActivity extends AppCompatActivity {
@@ -50,15 +55,14 @@ public class DownloadActivity extends AppCompatActivity {
                 StorageReference storageReference = FirebaseStorage.getInstance().getReference();
                 pathReference = storageReference.child(downUID+"/"+downMD5);
 
-                    pathReference.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                pathReference.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
                         @Override
                         public void onSuccess(StorageMetadata storageMetadata) {
                             fileName = storageMetadata.getCustomMetadata("fileName");
                             fileExt = fileName.substring(fileName.lastIndexOf(".") + 1);
                             fileName = fileName.substring(0, fileName.lastIndexOf(".")-1);
                             File downLocation = new File("/sdcard/"+Environment.DIRECTORY_DOWNLOADS+"/Securivo/");
-                            Log.e("TEMP", downLocation.getPath());
-                            downLocation.mkdir();
+                            Log.e("MKDIR", downLocation.mkdir() ? "Created" : "Not");
                             try {
                                 localFile = File.createTempFile(fileName, "." + fileExt, downLocation);
                             } catch (Exception e) {
@@ -76,27 +80,42 @@ public class DownloadActivity extends AppCompatActivity {
                                                 "MB/" + df.format(totalMB) + "MB", Snackbar.LENGTH_LONG).show();
                                     }
                                 }
-                            }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                    Snackbar.make(findViewById(R.id.downloadCoordinator), "File download successful!", Snackbar.LENGTH_LONG)
-                                            .setAction("Action", null).show();
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    Log.e("APP/DOWN/2", exception.getMessage());
-                                }
+                                }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                        Snackbar.make(findViewById(R.id.downloadCoordinator), "Download complete, decrypting...", Snackbar.LENGTH_LONG)
+                                                .setAction("Action", null).show();
+                                        byte[] key = downMD5.getBytes();
+                                        try {
+                                            FileInputStream fis = new FileInputStream(localFile);
+                                            byte fileContent[] = new byte[(int) localFile.length()];
+                                            fis.read(fileContent);
+                                            byte decrypted[] = AES.decodeFile(key, fileContent);
+                                            OutputStream os = new FileOutputStream(localFile);
+                                            os.write(decrypted);
+                                            os.close();
+                                            Snackbar.make(findViewById(R.id.downloadCoordinator), "Download and decryption complete...", Snackbar.LENGTH_LONG)
+                                                    .setAction("Action", null).show();
+                                        } catch (Exception e) {
+                                            Log.e("APP/DOWN/BOS", e.getMessage());
+
+                                        }
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        Log.e("APP/DOWN/2", exception.getMessage());
+                                    }
                             });
                         }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Snackbar.make(findViewById(R.id.downloadCoordinator), "Failed retrieving metadata!", Snackbar.LENGTH_LONG)
-                                    .setAction("Action", null).show();
-                            Log.e("APP/DOWN/3", exception.getMessage());
-                        }
-                    });
+                }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                Snackbar.make(findViewById(R.id.downloadCoordinator), "Failed retrieving metadata!", Snackbar.LENGTH_LONG)
+                                        .setAction("Action", null).show();
+                                Log.e("APP/DOWN/3", exception.getMessage());
+                            }
+                });
 
 
 

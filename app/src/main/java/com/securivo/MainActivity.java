@@ -18,19 +18,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
-
-    protected void launchUploadActivity (View v) {
-        startActivity(new Intent(getBaseContext(), UploadActivity.class));
-    }
-
-    protected void launchDownloadActivity (View v) {
-        startActivity(new Intent(getBaseContext(), DownloadActivity.class));
-    }
-
-    protected void launchProfileActivity (View v) {
-        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
-    }
-
+    private Button btn1;
+    private Button btn2;
+    private Button btn3;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,5 +54,39 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            btn1 = findViewById(R.id.uploadBtn);
+            btn2 = findViewById(R.id.downloadBtn);
+            btn3 = findViewById(R.id.profileBtn);
+            btn1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    launchUploadActivity(v);
+                }
+            });
+            btn2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    launchDownloadActivity(v);
+                }
+            });
+            btn3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    launchProfileActivity(v);
+                }
+            });
     }
+
+    protected void launchUploadActivity (View v) {
+        startActivity(new Intent(getBaseContext(), UploadActivity.class));
+    }
+
+    protected void launchDownloadActivity (View v) {
+        startActivity(new Intent(getBaseContext(), DownloadActivity.class));
+    }
+
+    protected void launchProfileActivity (View v) {
+        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+    }
+
 }

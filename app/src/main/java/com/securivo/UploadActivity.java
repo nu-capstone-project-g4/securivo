@@ -25,8 +25,12 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.securivo.tools.MD5;
+import com.securivo.tools.AES;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 
 public class UploadActivity extends AppCompatActivity {
@@ -66,46 +70,63 @@ public class UploadActivity extends AppCompatActivity {
                     filePathTemp = getPath(data.getData()).split("/");
                     Snackbar.make(findViewById(R.id.uploadCoordinator), "Calculating MD5...", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                    String fileExt = filePathTemp[filePathTemp.length-1]; fileExt = fileExt.substring(fileExt.lastIndexOf(".") + 1);
-                    final String fileName = filePathTemp[filePathTemp.length-1];
-                    Log.d("APP/TEMP", fileName);
+                    String fileExt = filePathTemp[filePathTemp.length - 1];
+                    fileExt = fileExt.substring(fileExt.lastIndexOf(".") + 1);
+                    final String fileName = filePathTemp[filePathTemp.length - 1];
                     final String calculatedMD5 = MD5.calculateMD5(new File(getPath(data.getData())));
-                    String firebaseDbPath = firebaseUser.getUid()+"/"+calculatedMD5;
-
+                    String firebaseDbPath = firebaseUser.getUid() + "/" + calculatedMD5;
                     StorageMetadata storageMetadata = new StorageMetadata.Builder().setCustomMetadata("fileName", fileName).build();
+                    byte[] inputData = null;
+                    try {
+                        InputStream is = getContentResolver().openInputStream(data.getData());
+                        inputData = getBytes(is);
+                    } catch (Exception e) {
+                        Log.e("APP/UP", e.getMessage());
+                    }
+                    byte[] key = calculatedMD5.getBytes();
+                    byte[] encrypted = null;
+                    try {
+                        encrypted = AES.encodeFile(key, inputData);
+                    } catch (Exception e) {
+                        Log.e("APP/DOWN/E", e.getMessage());
+                    }
 
-                    mStorageRef.child(firebaseDbPath).putFile(data.getData(), storageMetadata)
-                            .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "File upload successful!\nMD5: "+calculatedMD5, Snackbar.LENGTH_LONG)
-                                            .setAction("Action", null).show();
-                                    Log.d("APP/UP/SUCCESS", taskSnapshot.toString());
-                                    editTextMD5.setText(calculatedMD5);
-                                }
-                            })
-                            .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                    float totalMB = Float.valueOf(taskSnapshot.getTotalByteCount())/1000000;
-                                    float doneMB = Float.valueOf(taskSnapshot.getBytesTransferred())/1000000;
-                                    DecimalFormat df = new DecimalFormat("#.##");
-                                    double progress = doneMB*100/totalMB;
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Progress: "
-                                            +df.format(progress)+"%\t\tUploaded "+df.format(doneMB)+
-                                            "MB out of "+df.format(totalMB)+"MB", Snackbar.LENGTH_LONG).show();
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle unsuccessful uploads
-                                    Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occurred."
-                                            , Snackbar.LENGTH_LONG)
-                                            .setAction("Action", null).show();
-                                    Log.d("APP/UP/FAIL", exception.toString());
-                                }
-                            });
+                    if (encrypted != null) {
+                        mStorageRef.child(firebaseDbPath).putBytes(encrypted, storageMetadata)
+                                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        Snackbar.make(findViewById(R.id.uploadCoordinator), "File upload successful!\nMD5: " + calculatedMD5, Snackbar.LENGTH_LONG)
+                                                .setAction("Action", null).show();
+                                        Log.d("APP/UP/SUCCESS", taskSnapshot.toString());
+                                        editTextMD5.setText(calculatedMD5);
+                                    }
+                                })
+                                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                        float totalMB = Float.valueOf(taskSnapshot.getTotalByteCount()) / 1000000;
+                                        float doneMB = Float.valueOf(taskSnapshot.getBytesTransferred()) / 1000000;
+                                        DecimalFormat df = new DecimalFormat("#.##");
+                                        double progress = doneMB * 100 / totalMB;
+                                        Snackbar.make(findViewById(R.id.uploadCoordinator), "Progress: "
+                                                + df.format(progress) + "%\t\tUploaded " + df.format(doneMB) +
+                                                "MB out of " + df.format(totalMB) + "MB", Snackbar.LENGTH_LONG).show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle unsuccessful uploads
+                                        Snackbar.make(findViewById(R.id.uploadCoordinator), "Error occurred."
+                                                , Snackbar.LENGTH_LONG)
+                                                .setAction("Action", null).show();
+                                        Log.d("APP/UP/FAIL", exception.toString());
+                                    }
+                                });
+                    } else {
+                        Log.e("APP/DOWN", "error error error");
+                    }
                 }
                 break;
         }
@@ -118,5 +139,17 @@ public class UploadActivity extends AppCompatActivity {
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
+    }
+
+    public byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
     }
 }
