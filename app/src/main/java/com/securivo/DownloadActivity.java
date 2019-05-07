@@ -35,6 +35,7 @@ public class DownloadActivity extends AppCompatActivity {
     private StorageReference pathReference;
     private File localFile;
     private String fileExt;
+    private byte[] iv;
     private String downUID;
     private String downMD5;
 
@@ -59,10 +60,11 @@ public class DownloadActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(StorageMetadata storageMetadata) {
                             fileName = storageMetadata.getCustomMetadata("fileName");
+                            iv = android.util.Base64.decode(storageMetadata.getCustomMetadata("iv"), android.util.Base64.DEFAULT);
                             fileExt = fileName.substring(fileName.lastIndexOf(".") + 1);
                             fileName = fileName.substring(0, fileName.lastIndexOf(".")-1);
-                            File downLocation = new File(Environment.getExternalStorageDirectory()+"/"+Environment.DIRECTORY_DOWNLOADS, "Securivo");
-                            Log.e("MKDIR", downLocation.mkdirs() ? "Created"+downLocation.toString() : "Not"+downLocation.toString());
+                            File downLocation = new File(getExternalFilesDir(null), "Securivo");
+                            Log.e("MKDIR", downLocation.mkdirs() ? "Created: "+downLocation.toString() : "Not: "+downLocation.toString());
                             try {
                                 localFile = File.createTempFile(fileName, "." + fileExt, downLocation);
                             } catch (Exception e) {
@@ -90,7 +92,7 @@ public class DownloadActivity extends AppCompatActivity {
                                             FileInputStream fis = new FileInputStream(localFile);
                                             byte fileContent[] = new byte[(int) localFile.length()];
                                             fis.read(fileContent);
-                                            byte decrypted[] = AES.decodeFile(key, fileContent);
+                                            byte decrypted[] = AES.decodeFile(key, fileContent, iv);
                                             OutputStream os = new FileOutputStream(localFile);
                                             os.write(decrypted);
                                             os.close();

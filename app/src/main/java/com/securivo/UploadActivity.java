@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.util.List;
 
 public class UploadActivity extends AppCompatActivity {
     private StorageReference mStorageRef;
@@ -75,7 +76,6 @@ public class UploadActivity extends AppCompatActivity {
                     final String fileName = filePathTemp[filePathTemp.length - 1];
                     final String calculatedMD5 = MD5.calculateMD5(new File(getPath(data.getData())));
                     String firebaseDbPath = firebaseUser.getUid() + "/" + calculatedMD5;
-                    StorageMetadata storageMetadata = new StorageMetadata.Builder().setCustomMetadata("fileName", fileName).build();
                     byte[] inputData = null;
                     try {
                         InputStream is = getContentResolver().openInputStream(data.getData());
@@ -84,15 +84,17 @@ public class UploadActivity extends AppCompatActivity {
                         Log.e("APP/UP", e.getMessage());
                     }
                     byte[] key = calculatedMD5.getBytes();
-                    byte[] encrypted = null;
+                    List<byte[]> encrypted = null;
                     try {
                         encrypted = AES.encodeFile(key, inputData);
                     } catch (Exception e) {
                         Log.e("APP/DOWN/E", e.getMessage());
                     }
 
+                    StorageMetadata storageMetadata = new StorageMetadata.Builder().setCustomMetadata("fileName", fileName).setCustomMetadata("iv", android.util.Base64.encodeToString(encrypted.get(1), android.util.Base64.DEFAULT)).build();
+
                     if (encrypted != null) {
-                        mStorageRef.child(firebaseDbPath).putBytes(encrypted, storageMetadata)
+                        mStorageRef.child(firebaseDbPath).putBytes(encrypted.get(0), storageMetadata)
                                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
